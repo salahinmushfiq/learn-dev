@@ -1,0 +1,21 @@
+@import "tailwindcss";
+html, body, #root {
+  height: 100%;
+   @apply bg-zinc-950 text-white;
+}
+@layer utilities {
+  .glow-blue {
+    box-shadow: 0 0 20px -5px var(--color-blue-500);
+  }
+  .glow-purple {
+    box-shadow: 0 0 20px -5px var(--color-purple-500);
+  }
+  /* Custom scrollbar for the JSON viewer */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 10px;
+  }
+}

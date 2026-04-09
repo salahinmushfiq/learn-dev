@@ -1,79 +1,64 @@
-// src/pages/FlowViewer.jsx
-import { useState, useMemo } from "react";
-import { useFlowRunner } from "../core/state/useFlowRunner";
+// src/pages/ProjectPage.jsx
+import { useParams } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
 import { useFlowContext } from "../contexts/FlowContext";
-import { flowsRegistry } from "../data/flows.registry";
-
-import { PaymentStatus } from "../components/PaymentStatus";
-import { TraceViewer } from "../components/TraceViewer";
-import { Controls } from "../components/Controls";
-import TimelineItem from "../components/TimelineItem";
-
-
+import { loadProjectFlows } from "../services/flowService";
+import DashboardLayout from "../components/layouts/DashboardLayout";
+import FlowRunnerView from "../components/FlowRunnerView";
 export default function FlowViewer() {
-  const { activeFlow } = useFlowContext();
-  const [flowKey, setFlowKey] = useState("jwt");
+  const { projectId } = useParams();
+  const { setActiveProject } = useFlowContext(); 
+  const [activeFlowId, setActiveFlowId] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const flow = useMemo(() => {
-    return activeFlow?.length ? activeFlow : flowsRegistry[flowKey];
-  }, [activeFlow, flowKey]);
+  // Sync Project Context
+  useEffect(() => {
+    setActiveProject(projectId);
+    return () => setActiveProject(null);
+  }, [projectId, setActiveProject]);
 
-  const {
-    history,
-    stepIndex,
-    currentState,
-    next,
-    prev,
-    goTo,
-  } = useFlowRunner(flow);
+  const result = useMemo(() => loadProjectFlows(projectId), [projectId]);
+  
+  // Ensure we have an array of flows for the sidebar
+  const projectFlows = useMemo(() => {
+    if (!result) return [];
+    return result.type === "project" ? result.data : [result.data];
+  }, [result]);
+
+  // Set default active flow
+  useEffect(() => {
+    if (projectFlows.length > 0 && !activeFlowId) {
+      setActiveFlowId(projectFlows[0].id);
+    }
+  }, [projectFlows, activeFlowId]);
+
+  const graphData = useMemo(() => {
+    return projectFlows.find((f) => f.id === activeFlowId) || null;
+  }, [projectFlows, activeFlowId]);
+
+  if (!result) return <div className="h-screen flex items-center justify-center text-zinc-500 font-mono">404 // FLOW_NOT_FOUND</div>;
+
   return (
-    <div className="grid grid-cols-3 gap-4 p-6 bg-zinc-950 text-white min-h-screen">
-
-      {/* LEFT */}
-      <div className="col-span-1 border-r border-white/10 pr-4">
-        <h2 className="text-xl font-bold mb-4">Steps</h2>
-
-        <div className="flex gap-2 flex-wrap mb-4">
-          {Object.keys(flowsRegistry).map((key) => (
-            <button
-              key={key}
-              onClick={() => setFlowKey(key)}
-              className="px-3 py-1 border rounded text-xs"
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-
-        {history.map((h, i) => (
-          <TimelineItem
-            key={h.stepId || i}
-            h={h}
-            i={i}
-            stepIndex={stepIndex}
-            goTo={goTo}
+    <DashboardLayout
+      projectId={projectId}
+      sidebarItems={projectFlows}
+      activeId={activeFlowId}
+      onSelect={setActiveFlowId}
+      isSidebarOpen={isSidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+    >
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8">
+        {graphData ? (
+          <FlowRunnerView 
+            key={`${projectId}-${activeFlowId}`} 
+            graphData={graphData} 
           />
-        ))}
+        ) : (
+          <div className="h-full flex items-center justify-center font-mono text-blue-500">
+             INITIALIZING_NODE_ENGINE...
+          </div>
+        )}
       </div>
-
-      {/* RIGHT */}
-      <div className="col-span-2">
-        <pre className="text-xs bg-black p-4 rounded">
-          {JSON.stringify(currentState, null, 2)}
-        </pre>
-        
-        {(flowKey === "payment"||"architecture") && <PaymentStatus paymentStatus={currentState?.payment?.status} />}
-
-        {flowKey === "architecture"  && <TraceViewer trace={currentState?.trace || []} />}
-
-        <Controls
-          history={history}
-          stepIndex={stepIndex}
-          next={next}
-          prev={prev}
-          goTo={goTo}
-        />
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

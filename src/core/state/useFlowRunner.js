@@ -1,31 +1,55 @@
-// src/core/state/useFlowRunner.js
+//src/core/state/useFlowRunner.js
 import { useMemo, useState, useEffect } from "react";
-import { runFlow } from "../engine/runFlow";
+export function useFlowRunner(graphData) {
+  const history = useMemo(() => {
+    if (!graphData || !graphData.nodes) return [];
 
-export function useFlowRunner(flow) {
-  const result = useMemo(() => {
-    return runFlow(Array.isArray(flow) ? flow : [], {
-      status: "initialized",
-      trace: [],
-    });
-  }, [flow]);
+    const historyLog = [];
+    let currentState = { status: "initialized" };
+    let currentNodeId = graphData.startNode;
+    const visited = new Set();
 
-  const history = result.history || [];
-  const maxIndex = Math.max(history.length - 1, 0);
+    while (currentNodeId && !visited.has(currentNodeId)) {
+      const node = graphData.nodes[currentNodeId];
+      if (!node) break;
+      
+      visited.add(currentNodeId);
+      const runFn = node.run || ((s) => s);
+      const nextState = structuredClone(runFn(currentState));
+
+      historyLog.push({
+        stepId: node.id,
+        event: node.title || node.label, 
+        state: nextState,
+        meta: {
+          service: node.meta?.service || "system"
+        }
+      });
+
+      currentState = nextState;
+
+      // Branching Logic
+      const nextLink = node.next;
+      if (typeof nextLink === "function") {
+        currentNodeId = nextLink(nextState);
+      } else if (typeof nextLink === "object" && nextLink !== null) {
+        const condition = (nextState.error || nextState.failed) ? "fail" : "success";
+        currentNodeId = nextLink[condition];
+      } else {
+        currentNodeId = nextLink;
+      }
+    }
+    return historyLog;
+  }, [graphData]);
 
   const [stepIndex, setStepIndex] = useState(0);
+  useEffect(() => setStepIndex(0), [graphData]);
 
-  useEffect(() => {
-    setStepIndex(0);
-  }, [flow]);
-
-  const safeIndex = Math.min(Math.max(stepIndex, 0), maxIndex);
-
+  const maxIndex = Math.max(history.length - 1, 0);
+  
   return {
     history,
-    stepIndex: safeIndex,
-    currentState: history[safeIndex]?.state || result.state,
-
+    stepIndex: Math.min(stepIndex, maxIndex),
     next: () => setStepIndex((i) => Math.min(i + 1, maxIndex)),
     prev: () => setStepIndex((i) => Math.max(i - 1, 0)),
     goTo: (i) => setStepIndex(Math.min(Math.max(i, 0), maxIndex)),

@@ -1,14 +1,24 @@
-//src/data/flows.registry.js
-import { authFlow } from "./auth.flow";
-import { rbacFlow } from "./rbac.flow";
-import { paymentsFlow } from "./payments.flow";
-import { architectureFlow } from "./architecture.flow";
+// src/data/flows.registry.js
+import { tourmateFlows } from "./flows/tourmate.flows";
+import { innerPatissierFlows } from "./flows/innerPatissier.flows";
 
-export const flowsRegistry = {
-  jwt: authFlow,
-  rbac: rbacFlow,
-  payment: paymentsFlow,
-  architecture: architectureFlow,
-};
+import jwtFlow from "./flows/auth/jwt.flow";
+import { paymentFlow } from "./flows/payments/payment.flow";
+import {rbacFlow} from "./flows/rbac/rbac.flow";
 
-export const getFlow = (key) => flowsRegistry[key] || [];
+export function getFlowsByProject(projectId) {
+  const projectMap = {
+    "tour-mate": tourmateFlows,
+    "inner-patissier": innerPatissierFlows,
+  };
+
+  return projectMap[projectId] || null;
+}
+
+export function getStandaloneFlows() {
+  return {
+    jwt: jwtFlow,
+    payment: paymentFlow,
+    rbac: rbacFlow,
+  };
+}

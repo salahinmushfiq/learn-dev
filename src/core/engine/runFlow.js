@@ -1,46 +1,56 @@
 // src/engine/runFlow.js
-import { adaptFlow } from "./adaptFlow";
+import { diffState } from "./diffState";
 
 export function runFlow(flow = [], initialState = {}, options = {}) {
   const history = [];
   let state = structuredClone(initialState);
 
-  // 🔥 ADD THIS
-  const normalizedFlow = adaptFlow(flow, options.projectMeta);
+  const chaos = options.chaos || false;
+  const seed = options.seed || 1;
 
-  for (let i = 0; i < normalizedFlow.length; i++) {
-    const step = normalizedFlow[i];
+  const rand = (i) => {
+    const x = Math.sin(seed + i * 9999) * 10000;
+    return x - Math.floor(x);
+  };
 
-    const nextState = step.run(state, { flow: normalizedFlow, index: i });
+  for (let i = 0; i < flow.length; i++) {
+    const step = flow[i];
+
+    const runFn = step.run || ((s) => s);
+
+    // chaos injection
+    if (chaos && rand(i) < 0.25) {
+      const failedState = {
+        ...state,
+        status: "failed_temp",
+        failedAt: step.id,
+      };
+
+      history.push({
+        stepId: step.id,
+        label: step.label,
+        type: "failure",
+        state: failedState,
+        diff: diffState(state, failedState),
+      });
+
+      state = failedState;
+      continue;
+    }
+
+    const nextState = structuredClone(runFn(state, { flow, index: i }));
 
     history.push({
       stepId: step.id,
       label: step.label,
-      type: step.type,
+      type: step.type || "state",
       state: nextState,
       diff: diffState(state, nextState),
-
-      // NOW THIS MAKES SENSE
-      explanation: step.explain?.(nextState),
-
-      meta: step.meta,
+      meta: step.meta || {},
     });
 
     state = nextState;
   }
 
   return { state, history };
-}
-
-function diffState(prev = {}, next = {}) {
-  const diff = {};
-  const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
-
-  for (const key of keys) {
-    if (JSON.stringify(prev[key]) !== JSON.stringify(next[key])) {
-      diff[key] = { before: prev[key], after: next[key] };
-    }
-  }
-
-  return diff;
 }

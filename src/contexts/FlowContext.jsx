@@ -4,20 +4,24 @@ import { createContext, useContext, useState, useCallback } from "react";
 const FlowContext = createContext();
 
 export function FlowProvider({ children }) {
-  const [draftFlow, setDraftFlow] = useState([]);
-  const [activeFlow, setActiveFlow] = useState([]);
+  const [draftFlow, setDraftFlow] = useState(null);
+  const [activeFlow, setActiveFlow] = useState(null);
+  const [flowMode, setFlowMode] = useState("view"); 
+  const [activeProject, setActiveProject] = useState(null);
 
   const updateDraft = useCallback((flow) => {
-    setDraftFlow(Array.isArray(flow) ? flow : []);
+    setDraftFlow(flow);
   }, []);
 
   const commitFlow = useCallback((flow) => {
-    setActiveFlow(Array.isArray(flow) ? flow : []);
+    setActiveFlow(flow);
+    setDraftFlow(null);
   }, []);
 
   const resetFlow = useCallback(() => {
-    setDraftFlow([]);
-    setActiveFlow([]);
+    setDraftFlow(null);
+    setActiveFlow(null);
+    setActiveProject(null);
   }, []);
 
   return (
@@ -25,8 +29,14 @@ export function FlowProvider({ children }) {
       value={{
         draftFlow,
         activeFlow,
-        updateDraft,
-        commitFlow,
+        flowMode,
+        activeProject,
+
+        setFlowMode,
+        setActiveProject,
+
+        setDraftFlow: updateDraft,
+        publishFlow: commitFlow,
         resetFlow,
       }}
     >

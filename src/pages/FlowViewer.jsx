@@ -1,4 +1,4 @@
-// src/pages/ProjectPage.jsx
+// src/pages/FlowViewer.jsx
 import { useParams } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useFlowContext } from "../contexts/FlowContext";

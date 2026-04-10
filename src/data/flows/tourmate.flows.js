@@ -1,94 +1,67 @@
 // src/data/flows/tourmate.flows.js
+
 export const tourmateFlows = [
   {
-    id: "tm-booking-payment",
+    id: "tm_booking_orchestration",
     projectId: "tour-mate",
-    tabLabel: "Booking + Payment",
-    startNode: "load-tour",
+    tabLabel: "Booking Orchestration",
+    startNode: "start",
+
     nodes: {
-      "load-tour": {
-        id: "load-tour",
-        title: "Load Tour Details",
+      start: {
+        id: "start",
+        title: "Start Booking",
         meta: { service: "frontend" },
-        run: (s) => ({ ...s, tour: { price: 5000 } }),
-        next: "check-auth",
+        run: (s) => ({ ...s, tourId: "T100" }),
+        next: "parallel_checks",
       },
-      "check-auth": {
-        id: "check-auth",
-        title: "JWT Auth Check",
-        meta: { service: "auth" },
-        run: (s) => ({ ...s, authenticated: true }),
-        next: "check-availability",
+
+      parallel_checks: {
+        id: "parallel_checks",
+        title: "Parallel Checks",
+        type: "parallel",
+        next: ["auth", "availability", "pricing"],
       },
-      "check-availability": {
-        id: "check-availability",
-        title: "Check Seat Availability",
-        meta: { service: "inventory" },
-        run: (s) => ({ ...s, available: true }),
-        next: "create-booking",
+
+      auth: {
+        id: "auth",
+        title: "Auth Check",
+        meta: { service: "auth", delay: 400 },
+        run: (s) => ({ ...s, auth: true }),
+        next: "merge",
       },
-      "create-booking": {
-        id: "create-booking",
-        title: "Create Booking (Partial)",
+
+      availability: {
+        id: "availability",
+        title: "Availability",
+        meta: { service: "inventory", delay: 800 },
+        run: (s) => ({ ...s, seats: true }),
+        next: "merge",
+      },
+
+      pricing: {
+        id: "pricing",
+        title: "Pricing",
+        meta: { service: "pricing", delay: 600 },
+        run: (s) => ({ ...s, price: 4800 }),
+        next: "merge",
+      },
+
+      merge: {
+        id: "merge",
+        title: "Merge Results",
+        type: "join",
+        waitFor: ["auth", "availability", "pricing"],
+        meta: { service: "backend" },
+        run: (s) => ({ ...s, ready: true }),
+        next: "booking",
+      },
+
+      booking: {
+        id: "booking",
+        title: "Create Booking",
         meta: { service: "booking" },
-        run: (s) => ({ ...s, bookingId: "BK101", dueAmount: 3000 }),
-        next: "payment-init",
-      },
-      "payment-init": {
-        id: "payment-init",
-        title: "Initialize SSLCommerz",
-        meta: { service: "payment" },
-        run: (s) => ({ ...s, paymentStatus: "initiated" }),
-        next: "payment-success",
-      },
-      "payment-success": {
-        id: "payment-success",
-        title: "Gateway Success",
-        meta: { service: "payment" },
-        run: (s) => ({ ...s, paidAmount: 2000, paymentStatus: "partial_paid" }),
-        next: "remaining-cod",
-      },
-      "remaining-cod": {
-        id: "remaining-cod",
-        title: "Remaining via COD",
-        meta: { service: "payment" },
-        run: (s) => ({ ...s, paymentStatus: "completed" }),
-        next: "finalize",
-      },
-      "finalize": {
-        id: "finalize",
-        title: "Confirm Booking",
-        meta: { service: "booking" },
-        run: (s) => ({ ...s, bookingStatus: "confirmed" }),
-        next: null,
-      },
-    },
-  },
-  {
-    id: "tm-search",
-    projectId: "tour-mate",
-    tabLabel: "Search & Filtering",
-    startNode: "search",
-    nodes: {
-      "search": {
-        id: "search",
-        title: "Search Tours",
-        meta: { service: "frontend" },
-        run: (s) => ({ ...s, results: [1, 2, 3] }),
-        next: "filter",
-      },
-      "filter": {
-        id: "filter",
-        title: "Apply Filters",
-        meta: { service: "search" },
-        run: (s) => ({ ...s, filteredResults: [2, 3] }),
-        next: "sort",
-      },
-      "sort": {
-        id: "sort",
-        title: "Sort Results",
-        meta: { service: "frontend" },
-        run: (s) => ({ ...s, sortedResults: [3, 2] }),
+        run: (s) => ({ ...s, bookingId: "BK777" }),
         next: null,
       },
     },

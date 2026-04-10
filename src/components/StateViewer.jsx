@@ -1,27 +1,4 @@
-// //src/components/StateViewer.jsx
-// import React from 'react'
-
-// const StateViewer = ({history,stepIndex}) => {
-//   return (
-//     <div className="bg-[#0a0a0c] rounded-xl border border-white/5 overflow-hidden">
-//         <div className="bg-white/5 px-4 py-2 flex items-center justify-between border-b border-white/5">
-//             <span className="text-[10px] font-mono text-zinc-400 uppercase">Live_State.json</span>
-//             <div className="flex gap-1.5">
-//             <div className="w-2 h-2 rounded-full bg-red-500/20" />
-//             <div className="w-2 h-2 rounded-full bg-yellow-500/20" />
-//             <div className="w-2 h-2 rounded-full bg-green-500/20" />
-//             </div>
-//         </div>
-//         <pre className="p-4 text-[11px] leading-relaxed font-mono text-blue-300 overflow-x-auto">
-//             {JSON.stringify(history[stepIndex]?.state || {}, null, 2)}
-//         </pre>
-//     </div>
-//   )
-// }
-
-// export default StateViewer
-// src/components/StateViewer.jsx
-// src/components/StateViewer.jsx (Enhanced version of your update)
+// src/components/StateViewer.jsx 
 import React, { useMemo } from 'react';
 
 const StateViewer = ({ history, stepIndex }) => {

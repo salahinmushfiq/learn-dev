@@ -1,4 +1,5 @@
 // src/services/flowService.js
+
 import {
   getFlowsByProject,
   getStandaloneFlows,
@@ -8,7 +9,8 @@ import { normalizeFlow } from "../utils/normalizeFlow";
 export function loadProjectFlows(projectId) {
   const projectFlows = getFlowsByProject(projectId);
 
-  if (projectFlows) {
+  // Ensure it's always an array
+  if (Array.isArray(projectFlows)) {
     return {
       type: "project",
       data: projectFlows.map(normalizeFlow),
@@ -17,7 +19,7 @@ export function loadProjectFlows(projectId) {
 
   const standaloneFlows = getStandaloneFlows();
 
-  if (standaloneFlows[projectId]) {
+  if (standaloneFlows?.[projectId]) {
     return {
       type: "graph",
       data: normalizeFlow(standaloneFlows[projectId]),

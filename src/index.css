@@ -1,3 +1,4 @@
+/* index.css */
 @import "tailwindcss";
 html, body, #root {
   height: 100%;
@@ -116,4 +117,85 @@ pre.font-mono {
 /* Glowing text for the "VAL_MODIFIED" badge */
 .badge-glow {
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+
+@keyframes flow-particle {
+  0% { offset-distance: 0%; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+.active-connector-path {
+  position: relative;
+}
+
+.active-connector-path::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #3b82f6;
+  animation: flow-particle 2s infinite linear;
+}
+
+@keyframes flow-pulse {
+  0% { stop-color: #3b82f6; stop-opacity: 0.2; }
+  50% { stop-color: #60a5fa; stop-opacity: 1; }
+  100% { stop-color: #3b82f6; stop-opacity: 0.2; }
+}
+
+.active-connector {
+  animation: flow-pulse 2s infinite;
+}
+@keyframes flow-animation {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+.active-connector-glow {
+  background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+  background-size: 100% 200%;
+  animation: flow-animation 1.5s linear infinite;
+}
+
+@keyframes flow-travel {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.active-path-pulse {
+  background: linear-gradient(to bottom, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+  background-size: 100% 400%;
+  animation: path-flow 2s linear infinite;
+}
+
+
+.active-path-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+  animation: flow-travel 1.5s infinite linear;
+}
+
+/* Pulse effect for the active connector lines */
+@keyframes path-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+
+/* Ensure smooth scrolling for the graph container */
+.custom-scrollbar {
+  scroll-behavior: smooth;
 }

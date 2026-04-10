@@ -1,105 +1,69 @@
-// src/data/flows/payment/payment.flow.js
+// src/data/flows/payments/payment.flow.js
+
 export const paymentFlow = {
-  id: "sslcommerz_payment",
-  title: "sslcommerz_payment",
-  projectId: "tour-mate",
-  startNode: "init_payment",
+  id: "payment_parallel",
+  title: "Distributed Payment Verification",
+  startNode: "init",
 
   nodes: {
-    init_payment: {
-      id: "init_payment",
-      title: "Frontend: Initialize Payment",
+    init: {
+      id: "init",
+      title: "Initialize Payment",
       meta: { service: "frontend" },
-
       run: (s) => ({
         ...s,
-        request: {
-          endpoint: "POST /payments/init",
-          gateway: "sslcommerz",
-          amount: 5000,
-          bookingId: "BK2001",
-        },
-        response: { sessionId: "SSLCZ2001", redirectURL: "https://sandbox.sslcommerz.com/session" },
-        paymentState: "initiated",
+        amount: 5000,
+        bookingId: "BK9001",
       }),
-
-      next: "redirect_to_gateway",
+      next: "parallel_processing",
     },
 
-    redirect_to_gateway: {
-      id: "redirect_to_gateway",
-      title: "Frontend: Redirect User to Gateway",
-      meta: { service: "frontend" },
-
-      run: (s) => ({
-        ...s,
-        request: { action: "redirect_user", url: s.response.redirectURL },
-        response: { status: "user_on_gateway" },
-        paymentState: "in_progress",
-      }),
-
-      next: "gateway_process",
+    parallel_processing: {
+      id: "parallel_processing",
+      title: "Parallel Processing",
+      type: "parallel",
+      next: ["gateway", "fraud_check", "logging"],
     },
 
-    gateway_process: {
-      id: "gateway_process",
-      title: "SSLCommerz: Gateway Processing",
-      meta: { service: "gateway" },
-
-      run: (s) => ({
-        ...s,
-        request: { sessionId: s.response.sessionId, amount: 5000 },
-        response: { tran_id: "TX5001", status: "VALID", gatewayMessage: "Payment Successful" },
-        gatewayState: "completed",
-      }),
-
-      next: "callback_backend",
+    gateway: {
+      id: "gateway",
+      title: "Gateway",
+      meta: { service: "sslcommerz", delay: 800 },
+      run: (s) => ({ ...s, gateway: "ok" }),
+      next: "merge",
     },
 
-    callback_backend: {
-      id: "callback_backend",
-      title: "Backend: Receive Gateway Callback",
+    fraud_check: {
+      id: "fraud_check",
+      title: "Fraud Check",
+      meta: { service: "security", delay: 1200 },
+      run: (s) => ({ ...s, fraud: "low" }),
+      next: "merge",
+    },
+
+    logging: {
+      id: "logging",
+      title: "Logging",
+      meta: { service: "logger", delay: 500 },
+      run: (s) => ({ ...s, logged: true }),
+      next: "merge",
+    },
+
+    merge: {
+      id: "merge",
+      title: "Merge & Verify",
       meta: { service: "backend" },
-
-      run: (s) => ({
-        ...s,
-        request: { tran_id: s.response.tran_id, status: s.response.status },
-        response: { verified: true, bookingId: "BK2001" },
-        paymentState: "verified",
-      }),
-
-      next: "update_booking_status",
+      type: "join",
+      waitFor: ["gateway", "fraud_check", "logging"],
+      run: (s) => ({ ...s, verified: true }),
+      next: "notify",
     },
 
-    update_booking_status: {
-      id: "update_booking_status",
-      title: "Backend: Update Booking Status",
-      meta: { service: "backend" },
-
-      run: (s) => ({
-        ...s,
-        request: { bookingId: s.response.bookingId, status: "paid" },
-        response: { success: true, bookingStatus: "confirmed" },
-        paymentState: "completed",
-        bookingStatus: "confirmed",
-      }),
-
-      next: "notify_frontend",
-    },
-
-    notify_frontend: {
-      id: "notify_frontend",
-      title: "Frontend: Receive Confirmation",
+    notify: {
+      id: "notify",
+      title: "Notify User",
       meta: { service: "frontend" },
-
-      run: (s) => ({
-        ...s,
-        request: { endpoint: "GET /bookings/BK2001/status" },
-        response: { bookingStatus: "confirmed", amountPaid: 5000 },
-        paymentState: "success",
-        confirmed: true,
-      }),
-
+      run: (s) => ({ ...s, done: true }),
       next: null,
     },
   },

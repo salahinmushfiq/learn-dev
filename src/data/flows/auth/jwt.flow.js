@@ -1,8 +1,9 @@
 //src/data/flows/auth/jwt.flow.js
 export default {
   id: "jwt_flow",
-  title: "JWT Auth Lifecycle",
+  title: "Auth + RBAC + Profile (Parallel)",
   startNode: "login",
+
   nodes: {
     login: {
       id: "login",
@@ -10,57 +11,74 @@ export default {
       meta: { service: "auth" },
       run: (s) => ({
         ...s,
-        accessToken: "jwt_access_token",
-        refreshToken: "jwt_refresh_token",
-        user: { id: 1, role: "tourist" },
-        status: "authenticated",
+        userId: 1,
+        token: "jwt_token",
       }),
-      next: "profile_fetch",
+      next: "parallel_auth",
     },
-    profile_fetch: {
-      id: "profile_fetch",
-      title: "Fetch User Profile",
-      meta: { service: "api" },
-      run: (s) => ({ ...s, profileLoaded: true }),
-      next: "protected_request",
+
+    parallel_auth: {
+      id: "parallel_auth",
+      title: "Parallel Auth Services",
+      type: "parallel",
+      meta: { service: "system" },
+      next: ["fetch_profile", "check_permissions", "init_session"],
     },
-    protected_request: {
-      id: "protected_request",
-      title: "Access Protected API",
-      meta: { service: "api" },
-      run: (s) => ({ ...s, lastAction: "fetch_bookings" }),
-      next: "token_expired",
-    },
-    token_expired: {
-      id: "token_expired",
-      title: "Access Token Expired",
-      meta: { service: "auth" },
-      run: (s) => ({ ...s, status: "expired", error: "token_not_valid" }),
-      next: "refresh",
-    },
-    refresh: {
-      id: "refresh",
-      title: "Refresh Token",
-      meta: { service: "auth" },
+
+    fetch_profile: {
+      id: "fetch_profile",
+      title: "Fetch Profile",
+      meta: { service: "api", delay: 700 },
       run: (s) => ({
         ...s,
-        accessToken: "new_access_token",
-        status: "refreshed",
+        profile: { name: "User", role: "admin" },
       }),
-      next: "retry_request",
+      next: "merge_auth",
     },
-    retry_request: {
-      id: "retry_request",
-      title: "Retry (Axios Interceptor)",
+
+    check_permissions: {
+      id: "check_permissions",
+      title: "RBAC Check",
+      meta: { service: "auth", delay: 1000 },
+      run: (s) => ({
+        ...s,
+        permissionGranted: true,
+      }),
+      next: "merge_auth",
+    },
+
+    init_session: {
+      id: "init_session",
+      title: "Initialize Session",
+      meta: { service: "frontend", delay: 400 },
+      run: (s) => ({
+        ...s,
+        sessionReady: true,
+      }),
+      next: "merge_auth",
+    },
+
+    merge_auth: {
+      id: "merge_auth",
+      title: "Merge Auth State",
+      type: "join",
+      waitFor: ["fetch_profile", "check_permissions", "init_session"],
+      meta: { service: "system" },
+      run: (s) => ({
+        ...s,
+        authenticated: true,
+      }),
+      next: "dashboard",
+    },
+
+    dashboard: {
+      id: "dashboard",
+      title: "Load Dashboard",
       meta: { service: "frontend" },
-      run: (s) => ({ ...s, retrySuccess: true }),
-      next: "logout",
-    },
-    logout: {
-      id: "logout",
-      title: "Logout & Clear",
-      meta: { service: "auth" },
-      run: (s) => ({ ...s, accessToken: null, status: "logged_out" }),
+      run: (s) => ({
+        ...s,
+        dashboardLoaded: true,
+      }),
       next: null,
     },
   },

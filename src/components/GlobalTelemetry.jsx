@@ -2,41 +2,27 @@
 import { useFlowContext } from "../contexts/FlowContext";
 import { useLocation } from "react-router-dom";
 
-export default function GlobalTelemetry() {
+export default function GlobalTelemetry({ progress = 0 }) {
   const { activeProject } = useFlowContext();
-  const location = useLocation();
-
-  // Only show full telemetry when inside a flow, show "Standby" on Home
-  const isHome = location.pathname === "/";
-
-  if (!activeProject && isHome) return null;
-
+  
   return (
-    <div className="fixed top-0 left-0 right-0 h-[2px] z-[100] bg-white/5">
+    <div className="fixed top-0 left-0 right-0 h-[3px] z-[100] bg-white/5">
+      {/* Dynamic progress bar linked to StepIndex */}
       <div 
-        className={`h-full bg-blue-500 transition-all duration-1000 ease-in-out ${activeProject ? 'w-full shadow-[0_0_15px_#3b82f6]' : 'w-0'}`} 
+        className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(59,130,246,0.6)]" 
+        style={{ width: `${progress}%` }} 
       />
       
-      <div className="absolute top-4 right-6 flex flex-col items-end gap-1 pointer-events-none">
-        <div className="bg-zinc-950/80 border border-white/10 px-3 py-1.5 rounded-lg backdrop-blur-xl flex items-center gap-3 shadow-2xl">
-          <div className="flex gap-1">
-            <span className={`w-1 h-1 rounded-full ${activeProject ? 'bg-blue-500 animate-pulse' : 'bg-zinc-700'}`} />
-            <span className={`w-1 h-1 rounded-full ${activeProject ? 'bg-blue-400 animate-pulse delay-75' : 'bg-zinc-700'}`} />
-          </div>
-          
-          <span className="text-[10px] font-mono font-bold tracking-tighter uppercase flex gap-2">
-            <span className="text-zinc-500">System_Status:</span>
-            <span className={activeProject ? "text-blue-400" : "text-zinc-600"}>
-              {activeProject ? `LINKED_TO_${activeProject.toUpperCase()}` : "CORE_STANDBY"}
-            </span>
+      <div className="absolute top-10 lg:top-8 right-16 lg:right-6  flex items-center gap-4">
+        <div className="hidden md:flex flex-col items-end">
+          <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em]">Engine_Status</span>
+          <span className="text-[10px] text-zinc-400 font-mono italic">
+            {activeProject ? `NODES_ACTIVE: ${activeProject}` : "STANDBY"}
           </span>
         </div>
-        
-        {activeProject && (
-          <span className="text-[8px] font-mono text-zinc-600 mr-2 uppercase tracking-[0.2em] animate-pulse">
-            Telemetry Sync Active
-          </span>
-        )}
+        <div className="w-9 h-9 rounded-xl bg-zinc-950 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
+           <div className={`w-2 h-2 rounded-full ${activeProject ? 'bg-blue-500 animate-ping' : 'bg-zinc-800'}`} />
+        </div>
       </div>
     </div>
   );

@@ -6,9 +6,14 @@ export function normalizeFlow(flow) {
     return {
       type: "graph",
       id: flow.id,
-      label: flow.label || flow.title || flow.tabLabel,
+      // 🔥 UNIFIED LABEL SYSTEM
+      label: flow.tabLabel || flow.title || "Untitled Flow",
+
+      // keep title separately (for headers, etc.)
+      title: flow.title || flow.tabLabel || "Untitled Flow",
+
       startNode: flow.startNode,
-      nodes: flow.nodes
+      nodes: flow.nodes || {},
     };
   }
 

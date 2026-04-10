@@ -6,12 +6,12 @@ const projects = [
   { id: "inner-patissier", name: "Inner Patissier", category: "Inventory", status: "Stable" },
   { id: "jwt", name: "JWT Auth", category: "Security", status: "Internal" },
   { id: "payment", name: "Payment Gateway", category: "Finance", status: "External" },
-  { id: "rbac", name: "RBAC Flow", category: "Access Control", status: "Stable" },
+  { id: "rbac", name: "RBAC Flow", category: "Access Control", status: "Stable" }
 ];
 
 export default function Home() {
   const navigate = useNavigate();
-
+  
   return (
     <div className="min-h-screen bg-[#050506] text-zinc-300 p-8 font-sans">
       <header className="max-w-6xl mx-auto mb-12">

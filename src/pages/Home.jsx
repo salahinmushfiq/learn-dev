@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const projects = [
   { id: "tour-mate", name: "TourMate", category: "Fullstack", status: "Stable" },
   { id: "inner-patissier", name: "Inner Patissier", category: "Inventory", status: "Stable" },
+  { id: "trek-bot", name: "TrekBot", category: "AI", status: "Stable" },
   { id: "jwt", name: "JWT Auth", category: "Security", status: "Internal" },
   { id: "payment", name: "Payment Gateway", category: "Finance", status: "External" },
   { id: "rbac", name: "RBAC Flow", category: "Access Control", status: "Stable" }

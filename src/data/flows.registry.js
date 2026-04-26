@@ -6,12 +6,14 @@ import { innerPatissierFlows } from "./flows/innerPatissier.flows";
 import jwtFlow from "./flows/auth/jwt.flow";
 import { paymentFlow } from "./flows/payments/payment.flow";
 import { rbacFlow } from "./flows/rbac/rbac.flow";
+import { trekBotFlows } from "./flows/trekbot.flows";
 
 // 🔥 PROJECT FLOWS → ALWAYS ARRAY
 export function getFlowsByProject(projectId) {
   const projectMap = {
     "tour-mate": tourmateFlows,
     "inner-patissier": innerPatissierFlows,
+    "trek-bot": trekBotFlows
   };
 
   const flows = projectMap[projectId];

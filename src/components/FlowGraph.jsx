@@ -129,7 +129,36 @@ export default function FlowGraph({ flow, history = [], stepIndex = 0 }) {
     return (
       <div className="flex flex-col items-center w-full">
         <NodeCard node={node} />
+        {/* ROUTER BRANCHES */}
+{node.__type === "router" && (
+  <div className="w-full flex flex-col items-center mt-4">
+    <div className="w-px h-6 bg-cyan-500/50" />
 
+    <div className="flex flex-wrap justify-center gap-10 relative pt-6">
+      {Object.entries(node.__branches || {}).map(
+        ([routeKey, branch]) => (
+          <div
+            key={routeKey}
+            className="flex flex-col items-center"
+          >
+            <span className="text-[8px] font-bold text-cyan-400 mb-1 tracking-widest uppercase">
+              {routeKey}
+            </span>
+
+            <Connector
+              active={
+                isNodeCompleted &&
+                activeSet.has(branch?.id)
+              }
+            />
+
+            {renderNode(branch)}
+          </div>
+        )
+      )}
+    </div>
+  </div>
+)}
         {/* PARALLEL BRANCHES */}
         {node.__type === "parallel" && (
           <div className="w-full flex flex-col items-center mt-4">
@@ -147,7 +176,7 @@ export default function FlowGraph({ flow, history = [], stepIndex = 0 }) {
             </div>
           </div>
         )}
-
+     
         {/* DECISION BRANCHES */}
         {node.__type === "decision" && (
           <div className="w-full flex flex-col items-center mt-4">

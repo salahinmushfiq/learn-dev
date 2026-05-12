@@ -18,10 +18,18 @@ export const rbacFlow = {
       type: "decision",
       title: "Check Role",
       meta: { service: "auth" },
-      run: (s) => ({
-        ...s,
-        permissionGranted: s.user.role === "admin",
-      }),
+      run: (s) => {
+        const granted =
+          s.user.role === "admin";
+
+        return {
+          ...s,
+          permissionGranted: granted,
+          decision: granted
+            ? "success"
+            : "fail",
+        };
+      },
       next: {
         success: "access_granted",
         fail: "deny_access",
